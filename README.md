@@ -1,151 +1,191 @@
-# ShopKart
+# ShopKart 🛒
 
-ShopKart is a modern, full-stack e-commerce web application. It features a responsive frontend interface built with React and Vite, paired with a robust backend API powered by Node.js, Express, and MongoDB. The application provides complete user authentication and product browsing capabilities, along with wishlist functionality.
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
+![License](https://img.shields.io/badge/license-ISC-blue)
+![React](https://img.shields.io/badge/React-18.x-blue?logo=react)
+![Node](https://img.shields.io/badge/Node-16.x+-success?logo=nodedotjs)
+![MongoDB](https://img.shields.io/badge/MongoDB-8.x-brightgreen?logo=mongodb)
 
-## Features
+ShopKart is a modern, responsive full-stack e-commerce web application. Built with the MERN-like stack (React, Node.js, Express, MongoDB), it provides a robust platform for browsing products, managing a personalized wishlist, and secure user authentication.
 
-- **User Authentication**: Secure user registration and login using JWT (JSON Web Tokens) and bcrypt for password hashing.
-- **Product Catalog**: Browse and view detailed information for various products.
-- **Wishlist Management**: Add and manage favorite items in a personalized wishlist.
-- **Responsive Design**: Built to work seamlessly across desktop and mobile devices.
-- **RESTful API**: A well-structured backend providing secure endpoints for users, products, and wishlists.
-- **Modern Frontend**: Leveraging React 18, Vite for fast builds, and React Router for seamless navigation.
+---
 
-## Tech Stack
+## 📑 Table of Contents
+
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Getting Started](#-getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation & Setup](#installation--setup)
+- [API Reference](#-api-reference)
+- [Project Structure](#-project-structure)
+- [Deployment](#-deployment)
+- [Contributing](#-contributing)
+- [License](#-license)
+
+---
+
+## ✨ Features
+
+- **Secure Authentication**: Robust user registration and login using JSON Web Tokens (JWT) and bcrypt for password hashing.
+- **Product Catalog**: Dynamic rendering of products with detailed views.
+- **Wishlist Management**: Authenticated users can curate and manage a personalized list of favorite items.
+- **Responsive UI**: A mobile-first design philosophy ensuring seamless experiences across devices.
+- **RESTful Architecture**: Clean, scalable backend API with isolated routes, controllers, and middlewares.
+
+---
+
+## 🛠 Tech Stack
 
 ### Frontend
-- **Framework**: React 18
-- **Build Tool**: Vite
-- **Routing**: React Router DOM
-- **HTTP Client**: Axios
-- **Styling**: Tailwind CSS (or similar, depending on setup in index.css) / Custom CSS
+- **Core**: React 18, React Router DOM
+- **Build Tool**: Vite (Lightning-fast HMR and optimized builds)
+- **State Management**: React Hooks
+- **Network Requests**: Axios
+- **Styling**: Modern CSS / ThemeProvider architecture
 
 ### Backend
-- **Runtime**: Node.js
-- **Framework**: Express.js
-- **Database**: MongoDB (with Mongoose ODM)
-- **Authentication**: JSON Web Tokens (JWT) & bcryptjs
-- **CORS & Cookies**: cors, cookie-parser
+- **Core**: Node.js, Express.js
+- **Database**: MongoDB with Mongoose ODM
+- **Authentication**: JWT (JSON Web Tokens)
+- **Security & Utils**: bcryptjs, cors, cookie-parser, dotenv
 
-## Prerequisites
+---
 
-Before you begin, ensure you have the following installed on your machine:
-- [Node.js](https://nodejs.org/en/) (v16.x or higher)
+## 🚀 Getting Started
+
+The project is structured as a monorepo containing both the `frontend` and `backend` directories.
+
+### Prerequisites
+
+Ensure you have the following installed on your local machine:
+- [Node.js](https://nodejs.org/en/) (v16.x or higher recommended)
 - [npm](https://www.npmjs.com/) (v8.x or higher)
-- [MongoDB](https://www.mongodb.com/) (local instance running or MongoDB Atlas URI)
+- [MongoDB](https://www.mongodb.com/try/download/community) (Local instance or an Atlas URI)
 
-## Installation & Setup
+### Installation & Setup
 
-The project is structured as a monorepo containing both `frontend` and `backend` directories. Follow the steps below to run both environments locally.
+1. **Clone the repository:**
+   ```bash
+   git clone <repository-url>
+   cd shopkart
+   ```
 
-### 1. Clone the repository
+2. **Backend Setup:**
+   ```bash
+   cd backend
+   npm install
+   ```
+   *Environment Variables:*
+   Copy the example environment file and update it with your credentials:
+   ```bash
+   cp .env.example .env
+   ```
+   Ensure your `.env` contains:
+   ```env
+   PORT=5000
+   MONGO_URI=mongodb://127.0.0.1:27017/shopkart
+   JWT_SECRET=your_super_secret_jwt_key
+   JWT_EXPIRES_IN=1d
+   NODE_ENV=development
+   ```
+   *Start the Backend Server:*
+   ```bash
+   npm run dev
+   ```
+   The backend will run on `http://localhost:5000`.
 
-```bash
-git clone <repository-url>
-cd shopkart
-```
+3. **Frontend Setup:**
+   Open a new terminal window:
+   ```bash
+   cd frontend
+   npm install
+   ```
+   *Start the Frontend Development Server:*
+   ```bash
+   npm run dev
+   ```
+   The application will be accessible at `http://localhost:5173`.
 
-### 2. Backend Setup
+---
 
-Open a new terminal window and navigate to the backend directory:
+## 🔌 API Reference
 
-```bash
-cd backend
-```
+The backend exposes a secure REST API. All endpoints requiring authentication expect a valid JWT cookie.
 
-Install the dependencies:
+### Authentication
+- `POST /customers/register` - Create a new account
+  - Body: `{ fullName, email, password, phone }`
+- `POST /customers/login` - Authenticate a user
+  - Body: `{ email, password }`
+- `GET /customers/me` - Retrieve current user profile (Protected)
+- `POST /customers/logout` - Clear authentication cookies (Protected)
 
-```bash
-npm install
-```
+### Products
+- `GET /products` - Retrieve all available products
+- `GET /products/:id` - Retrieve details of a specific product
 
-Set up environment variables:
-Create a `.env` file in the `backend` directory based on the provided `.env.example`:
+### Wishlist
+- Includes endpoints for fetching, adding, and removing items from a user's wishlist (Protected routes under `/wishlist`).
 
-```bash
-cp .env.example .env
-```
+---
 
-Make sure the following variables are correctly configured in your `.env` file:
-```env
-PORT=5000
-MONGO_URI=mongodb://127.0.0.1:27017/shopkart
-JWT_SECRET=your_jwt_secret_key_here
-JWT_EXPIRES_IN=1d
-NODE_ENV=development
-```
-
-Start the backend development server:
-
-```bash
-npm run dev
-```
-The backend server will run on `http://localhost:5000`.
-
-### 3. Frontend Setup
-
-Open another terminal window and navigate to the frontend directory:
-
-```bash
-cd frontend
-```
-
-Install the dependencies:
-
-```bash
-npm install
-```
-
-Start the frontend development server:
-
-```bash
-npm run dev
-```
-The frontend application will be available at `http://localhost:5173`.
-
-## API Endpoints
-
-The backend provides several key REST API endpoints.
-
-**Authentication:**
-- `POST /customers/register` - Register a new customer
-- `POST /customers/login` - Login customer
-- `GET /customers/me` - Get current customer profile
-- `POST /customers/logout` - Logout customer
-
-**Products:**
-- `GET /products` - Get list of products
-- `GET /products/:id` - Get specific product details
-
-**Wishlist:**
-- Provides standard CRUD operations for managing a user's wishlist (requires authentication).
-
-## Project Structure
+## 📂 Project Structure
 
 ```
 shopkart/
 ├── backend/                # Node.js + Express backend
-│   ├── controllers/        # Request handlers
-│   ├── middlewares/        # Custom middlewares (e.g., auth)
-│   ├── models/             # Mongoose database models
-│   ├── routes/             # API route definitions
-│   ├── utils/              # Utility functions
-│   ├── index.js            # Entry point for backend server
-│   └── package.json        # Backend dependencies
+│   ├── controllers/        # Business logic for routes
+│   ├── middlewares/        # Custom Express middlewares (Auth, etc.)
+│   ├── models/             # Mongoose schemas
+│   ├── routes/             # API endpoint definitions
+│   ├── utils/              # Helper functions
+│   ├── index.js            # Server entry point
+│   └── package.json
 │
 └── frontend/               # React + Vite frontend
-    ├── src/                # Source code
-    │   ├── components/     # Reusable React components
-    │   ├── pages/          # Application pages (Home, Login, etc.)
-    │   ├── services/       # API call handlers
-    │   ├── theme/          # UI theming config
-    │   ├── App.jsx         # Main application component
-    │   └── main.jsx        # React DOM rendering entry point
-    ├── index.html          # HTML template
-    ├── vite.config.js      # Vite configuration
-    └── package.json        # Frontend dependencies
+    ├── src/
+    │   ├── components/     # Reusable UI components
+    │   ├── pages/          # View-level components (Home, Login, etc.)
+    │   ├── services/       # Axios API handlers
+    │   ├── theme/          # UI theming providers
+    │   ├── App.jsx         # Root component & Routing
+    │   └── main.jsx        # Application entry point
+    ├── index.html
+    ├── vite.config.js
+    └── package.json
 ```
 
-## License
+---
 
-This project is licensed under the ISC License.
+## 🌍 Deployment
+
+### Backend
+The Node.js backend can be deployed to services like Render, Railway, or Heroku. Ensure you configure the `MONGO_URI` and `JWT_SECRET` in the platform's environment variables.
+
+### Frontend
+The React application can be easily built and deployed to Vercel, Netlify, or AWS S3.
+1. Build the production assets:
+   ```bash
+   cd frontend
+   npm run build
+   ```
+2. Deploy the generated `dist/` folder.
+
+---
+
+## 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome!
+
+1. Fork the project.
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`).
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
+4. Push to the branch (`git push origin feature/AmazingFeature`).
+5. Open a Pull Request.
+
+---
+
+## 📝 License
+
+This project is licensed under the **ISC License**.
