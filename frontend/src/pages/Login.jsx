@@ -3,50 +3,37 @@ import { Link, useNavigate } from "react-router-dom";
 import API from "../services/api";
 
 const Login = ({ setUser }) => {
-  const [credentials, setCredentials] = useState({
-    email: "",
-    password: "",
-  });
+  const [credentials, setCredentials] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setCredentials({
-      ...credentials,
-      [e.target.name]: e.target.value,
-    });
+    setCredentials({ ...credentials, [e.target.name]: e.target.value });
     setError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!credentials.email || !credentials.password) {
-      setError("Please provide email and password");
+      setError("Please provide email and password.");
       return;
     }
-
     setLoading(true);
     setError("");
-
     try {
       const response = await API.post("/login", credentials);
       if (response.data.success) {
-        // Fetch logged-in user profile to update state
         const profileRes = await API.get("/me");
         if (setUser) setUser(profileRes.data);
         navigate("/home");
       }
     } catch (err) {
-      if (err.response && err.response.status === 401) {
-        setError("Invalid Credentials");
-      } else if (err.response && err.response.data && err.response.data.message) {
-        setError(err.response.data.message);
-      } else {
-        setError("Invalid Credentials");
-      }
+      setError(
+        err.response?.status === 401
+          ? "Invalid email or password."
+          : err.response?.data?.message || "Invalid credentials."
+      );
     } finally {
       setLoading(false);
     }
@@ -55,45 +42,54 @@ const Login = ({ setUser }) => {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h2>Customer Login</h2>
+        {/* Brand mark */}
+        <div className="auth-brand-mark">🛒</div>
+
+        <h2>Welcome<br />back.</h2>
         <p className="auth-subtitle">Sign in to your ShopKart account</p>
 
-        {error && <div className="alert alert-error">{error}</div>}
+        {error && (
+          <div className="alert alert-error">
+            <span>⚠</span> {error}
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div className="form-group">
-            <label htmlFor="email">Email Address</label>
+            <label htmlFor="login-email">Email Address</label>
             <input
               type="email"
-              id="email"
+              id="login-email"
               name="email"
-              placeholder="e.g. john@gmail.com"
+              placeholder="john@example.com"
               value={credentials.email}
               onChange={handleChange}
               required
+              autoComplete="email"
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="login-password">Password</label>
             <input
               type="password"
-              id="password"
+              id="login-password"
               name="password"
-              placeholder="Enter password"
+              placeholder="••••••••"
               value={credentials.password}
               onChange={handleChange}
               required
+              autoComplete="current-password"
             />
           </div>
 
           <button type="submit" className="btn-submit" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
+            {loading ? "Signing in…" : "Sign In →"}
           </button>
         </form>
 
         <p className="auth-footer">
-          Don't have an account? <Link to="/register">Register here</Link>
+          No account yet? <Link to="/register">Create one free</Link>
         </p>
       </div>
     </div>

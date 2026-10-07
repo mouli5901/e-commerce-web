@@ -12,7 +12,8 @@ export const ThemeContext = createContext({
  * on the <html> element so CSS variables defined in tokens.css can switch.
  */
 export default function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState("light");
+  // Default to "dark" to match data-theme="dark" on <html>, avoiding FOUC
+  const [theme, setTheme] = useState("dark");
 
   // Initialise from storage or system preference
   useEffect(() => {

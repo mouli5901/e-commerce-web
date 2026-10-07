@@ -13,7 +13,7 @@ const Wishlist = () => {
     setError(null);
     try {
       const res = await API.get("/wishlist");
-      if (res.data && res.data.success) {
+      if (res.data?.success) {
         setWishlist(res.data.wishlist);
       } else {
         setError(res.data.message || "Failed to load wishlist.");
@@ -28,8 +28,7 @@ const Wishlist = () => {
   const handleRemove = async (productId) => {
     try {
       const res = await API.delete(`/wishlist/${productId}`);
-      if (res.data && res.data.success) {
-        // Refresh list
+      if (res.data?.success) {
         fetchWishlist();
       } else {
         alert(res.data.message || "Failed to remove product.");
@@ -39,33 +38,37 @@ const Wishlist = () => {
     }
   };
 
-  useEffect(() => {
-    fetchWishlist();
-  }, []);
+  useEffect(() => { fetchWishlist(); }, []);
 
   if (loading) {
-    return <p className="text-center mt-8">Loading your wishlist...</p>;
+    return (
+      <div className="state-container">
+        <div className="loading-dots"><span /><span /><span /></div>
+        <p className="state-text">Loading your wishlist…</p>
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div className="text-center mt-8">
-        <p>Something went wrong.</p>
-        <p>{error}</p>
-        <button onClick={fetchWishlist} className="mt-4 bg-indigo-600 text-white py-1 px-3 rounded">
+      <div className="state-container">
+        <span className="state-icon">⚠️</span>
+        <p className="state-title">Something went wrong</p>
+        <p className="state-text">{error}</p>
+        <button onClick={fetchWishlist} className="btn btn-primary">
           Try Again
         </button>
       </div>
     );
   }
 
-  if (!loading && wishlist.length === 0) {
+  if (wishlist.length === 0) {
     return (
-      <div className="text-center mt-8">
-        <p className="text-3xl mb-4">❤️</p>
-        <h2 className="text-xl font-semibold mb-2">Your wishlist is empty</h2>
-        <p className="mb-4">Save products you love and find them here later.</p>
-        <Link to="/products" className="bg-indigo-600 text-white py-1 px-3 rounded">
+      <div className="state-container">
+        <span className="state-icon">🤍</span>
+        <p className="state-title">Your wishlist is empty</p>
+        <p className="state-text">Save products you love and find them here.</p>
+        <Link to="/products" className="btn btn-primary" style={{ padding: 'var(--sp-3) var(--sp-6)', borderRadius: 'var(--r-md)' }}>
           Browse Products
         </Link>
       </div>
@@ -73,10 +76,15 @@ const Wishlist = () => {
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <h2 className="text-2xl font-semibold mb-4">My Wishlist</h2>
-      <p className="mb-4">{wishlist.length} product{wishlist.length > 1 ? "s" : ""} saved</p>
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+    <div className="wishlist-page">
+      <div className="wishlist-header">
+        <h1>My Wishlist</h1>
+        <p className="wishlist-count">
+          {wishlist.length} product{wishlist.length !== 1 ? "s" : ""} saved
+        </p>
+      </div>
+
+      <div className="products-grid">
         {wishlist.map((product) => (
           <WishlistCard key={product._id} product={product} onRemove={handleRemove} />
         ))}

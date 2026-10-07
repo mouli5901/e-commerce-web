@@ -19,7 +19,7 @@ const Products = () => {
       if (category && category !== 'All') query.append('category', category);
       const res = await API.get(`/products${query.toString() ? `?${query}` : ''}`);
       setProducts(res.data.products);
-    } catch (err) {
+    } catch {
       setError('Something went wrong while loading products.');
     } finally {
       setLoading(false);
@@ -31,21 +31,58 @@ const Products = () => {
   }, [search, category]);
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="products-page">
+      {/* Header */}
+      <div className="products-header">
+        <h1>All <span>Products</span></h1>
+        <p>Discover thousands of products curated just for you.</p>
+      </div>
+
+      {/* Search */}
       <SearchBar
         search={search}
         setSearch={setSearch}
         category={category}
         setCategory={setCategory}
       />
-      {loading && <p>Loading products...</p>}
-      {error && <p>{error}</p>}
-      {!loading && !error && products.length === 0 && <p>No products found.</p>}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {products.map((product) => (
-          <ProductCard key={product._id} product={product} />
-        ))}
-      </div>
+
+      {/* States */}
+      {loading && (
+        <div className="state-container">
+          <div className="loading-dots">
+            <span /><span /><span />
+          </div>
+          <p className="state-text">Loading products…</p>
+        </div>
+      )}
+
+      {error && (
+        <div className="state-container">
+          <span className="state-icon">⚠️</span>
+          <p className="state-title">Oops</p>
+          <p className="state-text">{error}</p>
+          <button onClick={fetchProducts} className="btn btn-primary">
+            Try Again
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && products.length === 0 && (
+        <div className="state-container">
+          <span className="state-icon">🔍</span>
+          <p className="state-title">No products found</p>
+          <p className="state-text">Try adjusting your search or filter.</p>
+        </div>
+      )}
+
+      {/* Grid */}
+      {!loading && !error && products.length > 0 && (
+        <div className="products-grid">
+          {products.map((product) => (
+            <ProductCard key={product._id} product={product} />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
