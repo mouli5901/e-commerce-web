@@ -61,6 +61,8 @@ const productRoutes = require("./routes/product.routes");
 app.use("/products", productRoutes);
 const wishlistRoutes = require("./routes/wishlist.routes");
 app.use("/wishlist", wishlistRoutes);
+const orderRoutes = require("./routes/order.routes");
+app.use("/orders", orderRoutes);
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/shopkart";

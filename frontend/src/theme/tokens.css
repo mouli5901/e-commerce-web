@@ -1,5 +1,4 @@
 /* src/theme/tokens.css — Bold Typography Design System */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 /* ══════════════════════════════════════════════════════════
    DARK MODE DEFAULTS  (the base :root is dark)
@@ -75,7 +74,7 @@
   /* === TEXT === */
   --clr-text-1:       #0d0b1e;
   --clr-text-2:       #4a4875;
-  --clr-text-3:       #9896b8;
+  --clr-text-3:       #636087;
   --clr-text-inv:     #f0f0ff;
 
   /* === NAVBAR GLASS === */
