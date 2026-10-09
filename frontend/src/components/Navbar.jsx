@@ -7,13 +7,14 @@ import { useCart } from "../context/CartContext";
 const Navbar = ({ user, setUser }) => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useContext(ThemeContext);
-  const { totalCount, openCart } = useCart();
+  const { totalCount, clearCart } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
       await API.post("/logout");
     } catch (_) {}
+    clearCart();
     if (setUser) setUser(null);
     setMobileMenuOpen(false);
     navigate("/login");
@@ -32,12 +33,12 @@ const Navbar = ({ user, setUser }) => {
 
         {/* Desktop Navigation Links */}
         <nav className="nav-links desktop-only" aria-label="Primary Navigation">
-          <Link to="/" className="nav-item">Store</Link>
-          <Link to="/products" className="nav-item">Catalog</Link>
+          <Link to="/products" className="nav-item">Products</Link>
 
           {user ? (
             <>
               <Link to="/wishlist" className="nav-item">Wishlist</Link>
+              <Link to="/cart" className="nav-item">Cart ({totalCount})</Link>
               <span className="nav-user" title={`Logged in as ${user.fullName}`}>
                 👤 {user.fullName.split(" ")[0]}
               </span>
@@ -52,6 +53,7 @@ const Navbar = ({ user, setUser }) => {
             </>
           ) : (
             <>
+              <Link to="/cart" className="nav-item">Cart ({totalCount})</Link>
               <Link to="/login" className="nav-item">Sign In</Link>
               <Link to="/register" className="nav-item btn-primary-sm">Get Started</Link>
             </>
@@ -73,10 +75,9 @@ const Navbar = ({ user, setUser }) => {
           </button>
 
           {/* Cart Trigger with live count badge */}
-          <button
-            type="button"
+          <Link
+            to="/cart"
             className="nav-cart-btn"
-            onClick={openCart}
             aria-label={`Open shopping cart with ${totalCount} items`}
           >
             <span className="cart-icon-svg" aria-hidden="true">🛒</span>
@@ -84,7 +85,7 @@ const Navbar = ({ user, setUser }) => {
             {totalCount > 0 && (
               <span className="nav-cart-badge">{totalCount}</span>
             )}
-          </button>
+          </Link>
 
           {/* Mobile Hamburger Button (44px target) */}
           <button
@@ -105,11 +106,11 @@ const Navbar = ({ user, setUser }) => {
       {mobileMenuOpen && (
         <div className="mobile-nav-drawer" role="dialog" aria-label="Mobile navigation">
           <div className="mobile-nav-content">
-            <Link to="/" className="mobile-nav-item" onClick={closeMobile}>
-              Store
-            </Link>
             <Link to="/products" className="mobile-nav-item" onClick={closeMobile}>
-              Catalog
+              Products
+            </Link>
+            <Link to="/cart" className="mobile-nav-item" onClick={closeMobile}>
+              🛒 Cart ({totalCount})
             </Link>
 
             {user ? (

@@ -1,29 +1,14 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import API from "../services/api";
 
 const CartContext = createContext();
 
-const CART_STORAGE_KEY = "shopkart_cart_v1";
-
 export const CartProvider = ({ children }) => {
-  const [cart, setCart] = useState(() => {
-    try {
-      const saved = localStorage.getItem(CART_STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-
+  const [cart, setCart] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: "", type: "success" });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
-    } catch (e) {
-      console.error("Failed to save cart to localStorage", e);
-    }
-  }, [cart]);
 
   const showToast = (message, type = "success") => {
     setToast({ visible: true, message, type });
@@ -32,68 +17,114 @@ export const CartProvider = ({ children }) => {
     }, 2800);
   };
 
-  const addToCart = (product, quantity = 1, variant = "Standard") => {
-    const qty = Math.max(1, Number(quantity) || 1);
-    const prodId = product._id || product.id;
+  const normalizeCartItem = (item) => {
+    const product = item.product || {};
+    const prodId = product._id || item.id || item._id;
+    const price = Number(product.price || item.price || 0);
+    const originalPrice = product.originalPrice || Math.round(price * 1.25);
+    const discount =
+      product.discount ||
+      Math.round((((originalPrice - price) / (originalPrice || 1)) * 100));
 
-    setCart((prevCart) => {
-      const existingIndex = prevCart.findIndex(
-        (item) => item.id === prodId && item.variant === variant
-      );
+    return {
+      _id: item._id || prodId,
+      product: product,
+      id: prodId,
+      name: product.name || item.name || "Product",
+      price,
+      originalPrice,
+      discount,
+      image: product.image || item.image || "",
+      category: product.category || item.category || "",
+      stock: product.stock !== undefined ? product.stock : (item.stock !== undefined ? item.stock : 10),
+      quantity: Number(item.quantity) || 1,
+      variant: item.variant || "Standard",
+    };
+  };
 
-      if (existingIndex > -1) {
-        const updated = [...prevCart];
-        updated[existingIndex].quantity += qty;
-        return updated;
-      } else {
-        const originalPrice =
-          product.originalPrice || Math.round(product.price * 1.25);
-        const discount =
-          product.discount ||
-          Math.round(((originalPrice - product.price) / originalPrice) * 100);
-
-        return [
-          ...prevCart,
-          {
-            id: prodId,
-            name: product.name,
-            price: Number(product.price),
-            originalPrice,
-            discount,
-            image: product.image,
-            category: product.category,
-            rating: product.rating || 4.7,
-            reviewsCount: product.reviewsCount || 128,
-            quantity: qty,
-            variant,
-            stock: product.stock !== undefined ? product.stock : 25,
-          },
-        ];
+  const refreshCart = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await API.get("/cart");
+      if (res.data && res.data.success) {
+        const items = (res.data.cart || []).map(normalizeCartItem);
+        setCart(items);
       }
-    });
-
-    showToast(`Added "${product.name}" to your cart!`);
-    setIsCartOpen(true);
-  };
-
-  const removeFromCart = (id, variant = "Standard") => {
-    setCart((prev) => prev.filter((item) => !(item.id === id && item.variant === variant)));
-    showToast("Item removed from cart", "info");
-  };
-
-  const updateQuantity = (id, variant, newQty) => {
-    if (newQty <= 0) {
-      removeFromCart(id, variant);
-      return;
+    } catch (err) {
+      if (err.response?.status === 401) {
+        // Not authenticated, cart is empty
+        setCart([]);
+      } else {
+        setError("Unable to load your cart.");
+      }
+    } finally {
+      setLoading(false);
     }
-    setCart((prev) =>
-      prev.map((item) => {
-        if (item.id === id && item.variant === variant) {
-          return { ...item, quantity: newQty };
-        }
-        return item;
-      })
-    );
+  }, []);
+
+  useEffect(() => {
+    refreshCart();
+  }, [refreshCart]);
+
+  const addToCart = async (productOrId, quantity = 1) => {
+    const prodId =
+      typeof productOrId === "object"
+        ? productOrId._id || productOrId.id
+        : productOrId;
+
+    try {
+      const res = await API.post(`/cart/${prodId}`);
+      if (res.data && res.data.success) {
+        const items = (res.data.cart || []).map(normalizeCartItem);
+        setCart(items);
+        showToast("Added to cart!");
+        return { success: true };
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || "Failed to add to cart";
+      showToast(msg, "error");
+      return { success: false, message: msg };
+    }
+  };
+
+  const updateQuantity = async (productId, arg2, arg3) => {
+    const newQty =
+      typeof arg2 === "number"
+        ? arg2
+        : typeof arg3 === "number"
+        ? arg3
+        : Number(arg2);
+
+    if (isNaN(newQty) || newQty < 1) return;
+    try {
+      const res = await API.patch(`/cart/${productId}`, { quantity: Number(newQty) });
+      if (res.data && res.data.success) {
+        const items = (res.data.cart || []).map(normalizeCartItem);
+        setCart(items);
+        return { success: true };
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || "Failed to update quantity";
+      showToast(msg, "error");
+      return { success: false, message: msg };
+    }
+  };
+
+  const removeFromCart = async (productId) => {
+    try {
+      const res = await API.delete(`/cart/${productId}`);
+      if (res.data && res.data.success) {
+        const items = (res.data.cart || []).map(normalizeCartItem);
+        setCart(items);
+        showToast("Item removed from cart", "info");
+        return { success: true };
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || "Failed to remove item";
+      showToast(msg, "error");
+      return { success: false, message: msg };
+    }
   };
 
   const clearCart = () => {
@@ -104,6 +135,7 @@ export const CartProvider = ({ children }) => {
   const closeCart = () => setIsCartOpen(false);
   const toggleCart = () => setIsCartOpen((prev) => !prev);
 
+  // Derived Values
   const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const FREE_SHIPPING_THRESHOLD = 499;
@@ -119,9 +151,15 @@ export const CartProvider = ({ children }) => {
     <CartContext.Provider
       value={{
         cart,
+        cartItems: cart,
+        loading,
+        cartLoading: loading,
+        error,
+        cartError: error,
         addToCart,
         removeFromCart,
         updateQuantity,
+        refreshCart,
         clearCart,
         totalCount,
         subtotal,

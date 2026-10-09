@@ -144,9 +144,8 @@ const CartDrawer = () => {
                       <button
                         type="button"
                         className="cart-qty-btn"
-                        onClick={() =>
-                          updateQuantity(item.id, item.variant, item.quantity - 1)
-                        }
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        disabled={item.quantity <= 1}
                         aria-label="Decrease quantity"
                       >
                         −
@@ -155,9 +154,8 @@ const CartDrawer = () => {
                       <button
                         type="button"
                         className="cart-qty-btn"
-                        onClick={() =>
-                          updateQuantity(item.id, item.variant, item.quantity + 1)
-                        }
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        disabled={item.quantity >= item.stock}
                         aria-label="Increase quantity"
                       >
                         +
@@ -204,9 +202,19 @@ const CartDrawer = () => {
               <button
                 type="button"
                 className="btn-primary cart-checkout-btn"
+                onClick={() => {
+                  closeCart();
+                  navigate("/cart");
+                }}
+              >
+                VIEW CART PAGE ({cart.reduce((s, i) => s + i.quantity, 0)}) →
+              </button>
+              <button
+                type="button"
+                className="btn-outline cart-checkout-btn"
                 onClick={handleCheckout}
               >
-                PROCEED TO CHECKOUT →
+                PROCEED TO CHECKOUT
               </button>
               <button
                 type="button"

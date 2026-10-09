@@ -6,7 +6,7 @@ import { useCart } from "../context/CartContext";
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart, updateQuantity } = useCart();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -39,15 +39,21 @@ const ProductDetails = () => {
     fetchProduct();
   }, [id]);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!product || product.stock === 0) return;
-    addToCart(product, quantity, selectedVariant);
+    const res = await addToCart(product._id);
+    if (res?.success && quantity > 1) {
+      await updateQuantity(product._id, quantity);
+    }
   };
 
-  const handleBuyNow = () => {
+  const handleBuyNow = async () => {
     if (!product || product.stock === 0) return;
-    addToCart(product, quantity, selectedVariant);
-    navigate("/checkout");
+    const res = await addToCart(product._id);
+    if (res?.success && quantity > 1) {
+      await updateQuantity(product._id, quantity);
+    }
+    navigate("/cart");
   };
 
   const addToWishlist = async () => {

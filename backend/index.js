@@ -61,6 +61,8 @@ const productRoutes = require("./routes/product.routes");
 app.use("/products", productRoutes);
 const wishlistRoutes = require("./routes/wishlist.routes");
 app.use("/wishlist", wishlistRoutes);
+const cartRoutes = require("./routes/cart.routes");
+app.use("/cart", cartRoutes);
 const orderRoutes = require("./routes/order.routes");
 app.use("/orders", orderRoutes);
 

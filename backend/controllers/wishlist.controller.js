@@ -27,7 +27,7 @@ const addToWishlist = async (req, res) => {
       return res.status(401).json({ success: false, message: 'User not found' });
     }
 
-    // Prevent duplicates
+
     if (user.wishlist.includes(productId)) {
       return res.status(409).json({ success: false, message: 'Product already in wishlist' });
     }

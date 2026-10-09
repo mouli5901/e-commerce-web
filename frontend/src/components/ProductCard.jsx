@@ -5,9 +5,13 @@ import { useCart } from "../context/CartContext";
 
 const ProductCard = ({ product }) => {
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { cart, addToCart } = useCart();
   const [wishlistStatus, setWishlistStatus] = useState("idle"); // idle | loading | success | error
   const [addingToCart, setAddingToCart] = useState(false);
+
+  const isInCart = cart.some(
+    (item) => (item.product?._id || item.id) === product._id
+  );
 
   const originalPrice = product.originalPrice || Math.round(product.price * 1.25);
   const discountPercent =
@@ -18,11 +22,12 @@ const ProductCard = ({ product }) => {
 
   const handleDetails = () => navigate(`/products/${product._id}`);
 
-  const handleAddToCart = (e) => {
+  const handleAddToCart = async (e) => {
     e.stopPropagation();
+    if (addingToCart || product.stock === 0) return;
     setAddingToCart(true);
-    addToCart(product, 1);
-    setTimeout(() => setAddingToCart(false), 500);
+    await addToCart(product._id, 1);
+    setAddingToCart(false);
   };
 
   const addToWishlist = async (e) => {
@@ -110,11 +115,17 @@ const ProductCard = ({ product }) => {
           <button
             type="button"
             onClick={handleAddToCart}
-            disabled={product.stock === 0}
+            disabled={product.stock === 0 || addingToCart}
             className={`btn-add-cart ${addingToCart ? "adding-bounce" : ""}`}
             aria-label={`Add ${product.name} to cart`}
           >
-            {product.stock === 0 ? "Out of Stock" : "Add to Cart +"}
+            {product.stock === 0
+              ? "Out of Stock"
+              : addingToCart
+              ? "Adding..."
+              : isInCart
+              ? "Add Another +"
+              : "Add to Cart +"}
           </button>
         </div>
       </div>
