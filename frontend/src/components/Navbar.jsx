@@ -38,6 +38,7 @@ const Navbar = ({ user, setUser }) => {
           {user ? (
             <>
               <Link to="/wishlist" className="nav-item">Wishlist</Link>
+              <Link to="/orders" className="nav-item">Orders</Link>
               <Link to="/cart" className="nav-item">Cart ({totalCount})</Link>
               <span className="nav-user" title={`Logged in as ${user.fullName}`}>
                 👤 {user.fullName.split(" ")[0]}
@@ -117,6 +118,9 @@ const Navbar = ({ user, setUser }) => {
               <>
                 <Link to="/wishlist" className="mobile-nav-item" onClick={closeMobile}>
                   🤍 Wishlist
+                </Link>
+                <Link to="/orders" className="mobile-nav-item" onClick={closeMobile}>
+                  📦 Orders
                 </Link>
                 <div className="mobile-user-profile">
                   <span>Signed in as <strong>{user.fullName}</strong></span>

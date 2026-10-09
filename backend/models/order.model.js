@@ -4,57 +4,108 @@ const orderItemSchema = new mongoose.Schema({
   product: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Product",
-    required: false,
+    required: true,
   },
-  name: { type: String, required: true },
-  price: { type: Number, required: true },
-  quantity: { type: Number, required: true, min: 1 },
-  image: { type: String, default: "" },
-  variant: { type: String, default: "Default" },
+  name: {
+    type: String,
+    required: true,
+  },
+  price: {
+    type: Number,
+    required: true,
+  },
+  quantity: {
+    type: Number,
+    required: true,
+    min: 1,
+  },
+  image: {
+    type: String,
+    default: "",
+  },
 });
 
 const orderSchema = new mongoose.Schema(
   {
-    orderNumber: {
-      type: String,
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Customer",
       required: true,
-      unique: true,
     },
+    // Backward-compatibility alias
     customer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Customer",
-      required: false,
-    },
-    guestEmail: {
-      type: String,
-      default: "",
     },
     items: [orderItemSchema],
     shippingAddress: {
-      fullName: { type: String, required: true },
-      phone: { type: String, required: true },
-      addressLine: { type: String, required: true },
-      city: { type: String, required: true },
-      state: { type: String, default: "" },
-      pincode: { type: String, required: true },
+      fullName: {
+        type: String,
+        required: true,
+      },
+      phone: {
+        type: String,
+        required: true,
+      },
+      addressLine1: {
+        type: String,
+        required: true,
+      },
+      addressLine: {
+        type: String,
+      },
+      city: {
+        type: String,
+        required: true,
+      },
+      state: {
+        type: String,
+        required: true,
+      },
+      pincode: {
+        type: String,
+        required: true,
+      },
     },
-    paymentMethod: {
-      type: String,
-      enum: ["COD", "UPI", "CARD", "NETBANKING"],
-      default: "COD",
+    totalAmount: {
+      type: Number,
+      required: true,
+    },
+    // Backward-compatibility fields
+    subtotal: {
+      type: Number,
+    },
+    shippingFee: {
+      type: Number,
+      default: 0,
+    },
+    total: {
+      type: Number,
     },
     paymentStatus: {
       type: String,
-      enum: ["PENDING", "COMPLETED", "FAILED"],
-      default: "COMPLETED",
+      enum: ["PENDING", "PAID", "FAILED"],
+      default: "PENDING",
     },
-    subtotal: { type: Number, required: true },
-    shippingFee: { type: Number, default: 0 },
-    total: { type: Number, required: true },
     status: {
       type: String,
-      enum: ["PLACED", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED"],
-      default: "PLACED",
+      enum: [
+        "PENDING_PAYMENT",
+        "PLACED",
+        "CONFIRMED",
+        "SHIPPED",
+        "DELIVERED",
+        "CANCELLED",
+      ],
+      default: "PENDING_PAYMENT",
+    },
+    razorpayOrderId: {
+      type: String,
+      default: "",
+    },
+    razorpayPaymentId: {
+      type: String,
+      default: "",
     },
   },
   { timestamps: true }

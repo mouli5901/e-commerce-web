@@ -11,6 +11,8 @@ import ProductDetails from "./pages/ProductDetails";
 import Wishlist from "./pages/Wishlist";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
+import Orders from "./pages/Orders";
+import OrderSuccess from "./pages/OrderSuccess";
 import ThemeProvider from "./theme/ThemeProvider";
 import { CartProvider } from "./context/CartContext";
 import API from "./services/api";
@@ -55,6 +57,9 @@ function App() {
               <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/checkout" element={<Checkout />} />
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/order-success/:id" element={<OrderSuccess />} />
+              <Route path="/orders/:id" element={<OrderSuccess />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
