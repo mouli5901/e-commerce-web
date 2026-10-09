@@ -30,6 +30,8 @@ ShopKart is a modern, responsive full-stack e-commerce web application. Built wi
 - **Secure Authentication**: Robust user registration and login using JSON Web Tokens (JWT) and bcrypt for password hashing.
 - **Product Catalog**: Dynamic rendering of products with detailed views.
 - **Wishlist Management**: Authenticated users can curate and manage a personalized list of favorite items.
+- **Cart Management**: Authenticated users can add, update, and remove products from their shopping cart.
+- **Order Processing**: Users can checkout and place orders, and view their order history.
 - **Responsive UI**: A mobile-first design philosophy ensuring seamless experiences across devices.
 - **RESTful Architecture**: Clean, scalable backend API with isolated routes, controllers, and middlewares.
 
@@ -127,6 +129,17 @@ The backend exposes a secure REST API. All endpoints requiring authentication ex
 
 ### Wishlist
 - Includes endpoints for fetching, adding, and removing items from a user's wishlist (Protected routes under `/wishlist`).
+
+### Cart
+- `POST /cart/:productId` - Add a product to the cart (Protected)
+- `GET /cart` - Retrieve current user's cart (Protected)
+- `PATCH /cart/:productId` - Update the quantity of a product in the cart (Protected)
+- `DELETE /cart/:productId` - Remove a product from the cart (Protected)
+
+### Orders
+- `POST /orders` - Create a new order (Protected)
+- `GET /orders/my-orders` - Retrieve the current user's order history (Protected)
+- `GET /orders/:id` - Retrieve details of a specific order (Protected)
 
 ---
 
