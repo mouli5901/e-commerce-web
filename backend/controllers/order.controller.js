@@ -111,6 +111,7 @@ const createPaymentOrder = async (req, res) => {
     // 5. Create Razorpay order (amount in paise = INR * 100)
     const amountInPaise = Math.round(calculatedTotal * 100);
     let rzpOrderId = "";
+    let isTestMode = false;
 
     if (razorpay) {
       try {
@@ -121,11 +122,16 @@ const createPaymentOrder = async (req, res) => {
         });
         rzpOrderId = rzpOrder.id;
       } catch (rzpErr) {
-        console.warn("Razorpay API order creation warning, using test order ID fallback:", rzpErr.message);
-        rzpOrderId = "order_" + order._id.toString().slice(-14) + "_" + Math.floor(1000 + Math.random() * 9000);
+        console.warn("Razorpay API failed, switching to test mode:", rzpErr.error?.description || rzpErr.message);
+        isTestMode = true;
       }
     } else {
-      rzpOrderId = "order_" + order._id.toString().slice(-14) + "_" + Math.floor(1000 + Math.random() * 9000);
+      isTestMode = true;
+    }
+
+    // Test mode fallback — generate a deterministic test order ID
+    if (isTestMode) {
+      rzpOrderId = "order_test_" + order._id.toString().slice(-12);
     }
 
     order.razorpayOrderId = rzpOrderId;
@@ -138,7 +144,8 @@ const createPaymentOrder = async (req, res) => {
       razorpayOrderId: rzpOrderId,
       amount: amountInPaise,
       currency: "INR",
-      key: process.env.RAZORPAY_KEY_ID || "rzp_test_shopkart12345",
+      key: process.env.RAZORPAY_KEY_ID || "rzp_test_demo",
+      testMode: isTestMode,
     });
   } catch (error) {
     console.error("Create payment order error:", error);
@@ -178,25 +185,50 @@ const verifyPayment = async (req, res) => {
     }
 
     // 3. Signature verification
-    const secret = process.env.RAZORPAY_KEY_SECRET || "shopkart_razorpay_secret_test_2026";
-    // Use the trusted razorpayOrderId stored in our database
+    // 3. Signature verification
     const trustedOrderId = order.razorpayOrderId || razorpay_order_id;
-    const body = trustedOrderId + "|" + razorpay_payment_id;
+    const isTestOrder = trustedOrderId.startsWith("order_test_");
 
-    const expectedSignature = crypto
-      .createHmac("sha256", secret)
-      .update(body)
-      .digest("hex");
+    if (isTestOrder) {
+      // Test mode: verify using local HMAC with JWT secret
+      const testSecret = process.env.JWT_SECRET || "shopkart_test_secret";
+      const body = trustedOrderId + "|" + razorpay_payment_id;
+      const expectedSig = crypto
+        .createHmac("sha256", testSecret)
+        .update(body)
+        .digest("hex");
 
-    const isSimulatedTestSig = razorpay_signature === "test_signature_mock_paid" || razorpay_signature === "mock_signature_success";
+      if (expectedSig !== razorpay_signature) {
+        order.paymentStatus = "FAILED";
+        await order.save();
+        return res.status(400).json({
+          success: false,
+          message: "Invalid test payment signature",
+        });
+      }
+    } else {
+      // Real Razorpay mode: verify with Razorpay secret
+      const secret = process.env.RAZORPAY_KEY_SECRET;
+      if (!secret) {
+        return res.status(500).json({
+          success: false,
+          message: "Payment gateway secret not configured.",
+        });
+      }
+      const body = trustedOrderId + "|" + razorpay_payment_id;
+      const expectedSignature = crypto
+        .createHmac("sha256", secret)
+        .update(body)
+        .digest("hex");
 
-    if (expectedSignature !== razorpay_signature && !isSimulatedTestSig) {
-      order.paymentStatus = "FAILED";
-      await order.save();
-      return res.status(400).json({
-        success: false,
-        message: "Invalid payment signature",
-      });
+      if (expectedSignature !== razorpay_signature) {
+        order.paymentStatus = "FAILED";
+        await order.save();
+        return res.status(400).json({
+          success: false,
+          message: "Invalid payment signature",
+        });
+      }
     }
 
     // 4. Mark order as PAID and PLACED

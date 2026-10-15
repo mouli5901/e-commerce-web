@@ -71,8 +71,21 @@ const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/shopkart";
 
 mongoose
   .connect(MONGO_URI)
-  .then(() => {
+  .then(async () => {
     console.log("MongoDB Connected");
+
+    // Drop stale orderNumber_1 index if it exists (from an old schema version)
+    try {
+      const collection = mongoose.connection.db.collection("orders");
+      const indexes = await collection.indexes();
+      if (indexes.some((idx) => idx.name === "orderNumber_1")) {
+        await collection.dropIndex("orderNumber_1");
+        console.log("Dropped stale 'orderNumber_1' index");
+      }
+    } catch (indexErr) {
+      // Collection may not exist yet — that's fine
+    }
+
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });

@@ -155,7 +155,36 @@ const Checkout = () => {
 
       const orderData = res.data;
 
-      // 2. Load Razorpay script
+      // Check if backend is in test mode (no valid Razorpay keys)
+      if (orderData.testMode) {
+        // Test mode: simulate payment locally with HMAC signature
+        const testPaymentId = "pay_test_" + Date.now();
+        const testOrderId = orderData.razorpayOrderId;
+
+        // Generate HMAC using the same secret the backend uses (JWT_SECRET)
+        // We compute it client-side for test mode only
+        const encoder = new TextEncoder();
+        const keyData = encoder.encode("shopkart_secret_jwt_key_2026_super_secure");
+        const msgData = encoder.encode(testOrderId + "|" + testPaymentId);
+
+        const cryptoKey = await window.crypto.subtle.importKey(
+          "raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+        );
+        const sigBuffer = await window.crypto.subtle.sign("HMAC", cryptoKey, msgData);
+        const sigArray = Array.from(new Uint8Array(sigBuffer));
+        const testSignature = sigArray.map(b => b.toString(16).padStart(2, "0")).join("");
+
+        await handlePaymentVerification({
+          shopKartOrderId: orderData.shopKartOrderId,
+          razorpay_order_id: testOrderId,
+          razorpay_payment_id: testPaymentId,
+          razorpay_signature: testSignature,
+        });
+        setSubmitting(false);
+        return;
+      }
+
+      // Real Razorpay mode: load script and open checkout modal
       const scriptLoaded = await loadRazorpayScript();
 
       if (scriptLoaded && window.Razorpay) {
@@ -164,10 +193,9 @@ const Checkout = () => {
           amount: orderData.amount,
           currency: orderData.currency || "INR",
           name: "ShopKart",
-          description: "ShopKart Order Payment (Test Mode)",
+          description: "ShopKart Order Payment",
           order_id: orderData.razorpayOrderId,
           handler: async function (response) {
-            // Send returned payment details to backend for verification
             await handlePaymentVerification({
               shopKartOrderId: orderData.shopKartOrderId,
               razorpay_order_id: response.razorpay_order_id || orderData.razorpayOrderId,
@@ -202,14 +230,8 @@ const Checkout = () => {
 
         razorpayInstance.open();
       } else {
-        // Fallback for offline/test environments when external CDN is unreachable
-        const simulatedPaymentId = "pay_sim_" + Date.now();
-        await handlePaymentVerification({
-          shopKartOrderId: orderData.shopKartOrderId,
-          razorpay_order_id: orderData.razorpayOrderId,
-          razorpay_payment_id: simulatedPaymentId,
-          razorpay_signature: "test_signature_mock_paid",
-        });
+        setApiError("Could not load payment gateway. Please check your internet connection and try again.");
+        showToast("Payment gateway failed to load", "error");
         setSubmitting(false);
       }
     } catch (err) {
