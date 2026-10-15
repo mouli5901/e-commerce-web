@@ -31,7 +31,7 @@ ShopKart is a modern, responsive full-stack e-commerce web application. Built wi
 - **Product Catalog**: Dynamic rendering of products with detailed views.
 - **Wishlist Management**: Authenticated users can curate and manage a personalized list of favorite items.
 - **Cart Management**: Authenticated users can add, update, and remove products from their shopping cart.
-- **Order Processing**: Users can checkout and place orders, and view their order history.
+- **Order Processing**: Users can checkout and place orders via Razorpay payment gateway, and view their order history.
 - **Responsive UI**: A mobile-first design philosophy ensuring seamless experiences across devices.
 - **RESTful Architecture**: Clean, scalable backend API with isolated routes, controllers, and middlewares.
 
@@ -50,6 +50,7 @@ ShopKart is a modern, responsive full-stack e-commerce web application. Built wi
 - **Core**: Node.js, Express.js
 - **Database**: MongoDB with Mongoose ODM
 - **Authentication**: JWT (JSON Web Tokens)
+- **Payment Gateway**: Razorpay
 - **Security & Utils**: bcryptjs, cors, cookie-parser, dotenv
 
 ---
@@ -90,6 +91,9 @@ Ensure you have the following installed on your local machine:
    JWT_SECRET=your_super_secret_jwt_key
    JWT_EXPIRES_IN=1d
    NODE_ENV=development
+   RAZORPAY_KEY_ID=your_razorpay_key_id
+   RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+   CLIENT_URL=https://your-frontend-url.vercel.app
    ```
    *Start the Backend Server:*
    ```bash
@@ -103,6 +107,12 @@ Ensure you have the following installed on your local machine:
    cd frontend
    npm install
    ```
+   *Environment Variables:*
+   Create a `.env` file in the `frontend` directory:
+   ```env
+   VITE_API_URL=http://localhost:5000
+   ```
+
    *Start the Frontend Development Server:*
    ```bash
    npm run dev
@@ -137,9 +147,11 @@ The backend exposes a secure REST API. All endpoints requiring authentication ex
 - `DELETE /cart/:productId` - Remove a product from the cart (Protected)
 
 ### Orders
-- `POST /orders` - Create a new order (Protected)
+- `POST /orders/create-payment-order` - Create a pending order and Razorpay order (Protected)
+- `POST /orders/verify-payment` - Verify Razorpay payment signature & confirm order (Protected)
 - `GET /orders/my-orders` - Retrieve the current user's order history (Protected)
 - `GET /orders/:id` - Retrieve details of a specific order (Protected)
+- `PATCH /orders/:id/status` - Update order status progression (Protected)
 
 ---
 
@@ -174,16 +186,18 @@ shopkart/
 ## 🌍 Deployment
 
 ### Backend
-The Node.js backend can be deployed to services like Render, Railway, or Heroku. Ensure you configure the `MONGO_URI` and `JWT_SECRET` in the platform's environment variables.
+The Node.js backend can be deployed to services like Render, Railway, or Heroku. Ensure you configure the `MONGO_URI`, `JWT_SECRET`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and `CLIENT_URL` (to allow CORS from your deployed frontend) in the platform's environment variables.
 
 ### Frontend
-The React application can be easily built and deployed to Vercel, Netlify, or AWS S3.
-1. Build the production assets:
+The React application is pre-configured for Vercel deployment with SPA routing (`vercel.json`). It can also be built and deployed to Netlify or AWS S3.
+1. Configure Environment Variables on your hosting platform:
+   - `VITE_API_URL` (e.g., `https://your-backend.onrender.com`)
+2. Build the production assets:
    ```bash
    cd frontend
    npm run build
    ```
-2. Deploy the generated `dist/` folder.
+3. Deploy the generated `dist/` folder (or just connect your Git repository to Vercel).
 
 ---
 
