@@ -24,3 +24,6 @@ Thumbs.db
 # Editor directories
 .vscode/
 .idea/
+
+# Vite temporary files
+*.timestamp-*.mjs
